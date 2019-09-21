@@ -7,7 +7,7 @@ import { batchActions } from '../../shared/batchedActions';
 export function rotateLines(deltaTime) {
     const iterationsPerSecond = {
         min: 100,
-        max: 3000,
+        max: 10000,
     }
     return (dispatch, getState) => {
         const {
@@ -19,7 +19,7 @@ export function rotateLines(deltaTime) {
             optionFormReducer: {
                 speed,
                 maxPoints
-            }
+            }   
         } = getState();
         let newPath = [...path];
         let currentLinkRotation = links;

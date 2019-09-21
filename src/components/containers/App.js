@@ -1,4 +1,4 @@
-import * as lit from 'lit-html';
+import { html } from 'lit-html';
 import {styleMap} from 'lit-html/directives/style-map';
 import { PureComponent, StatefullComponent } from '../../shared/Component';
 import { OptionsForm } from './OptionsForm';
@@ -7,8 +7,8 @@ import { updateForm } from '../../redux/tasks/linetasks';
 import { PathReRenderCanvas, PathReRenderCanvasPerformant } from './PathCanvas/PathRerenderCanvas';
 import { updateField } from '../../redux/modules/optionsForm';
 import { LinkCanvas, LinkCanvasPerformant } from './LinkCanvas';
-const { html } = lit;
-console.log(lit);
+import { PathCanvas } from './PathCanvas/PathCanvas';
+
 const mapStateToProps = ({
     optionFormReducer,
     linkReducer,
@@ -21,10 +21,8 @@ const mapStateToProps = ({
         path: linkReducer.path,
     };
 }
-const c = document.createElement('canvas');
 export const App = connect(mapStateToProps)(StatefullComponent(() => {
-    const pathCanvas = PathReRenderCanvasPerformant(document.body)
-    const linkCanvas = LinkCanvasPerformant(document.body);
+    // const linkCanvas = LinkCanvasPerformant(document.body);
     return ({
         speed,
         options,
@@ -38,7 +36,7 @@ export const App = connect(mapStateToProps)(StatefullComponent(() => {
         };
         return html `
             <div>
-                ${pathCanvas({ path })}
+                ${PathCanvas({ path })}
                 ${OptionsForm({
                     speed,
                     options,

@@ -13,7 +13,13 @@ function toArrayBuffer (path) {
 export const PathReRenderCanvasPerformant = (appendTo) => {
     const resolution = 2;
     const canvas = FullWindowCanvas(resolution);
-    const animate = (time) => (ctx, { path=[] }) => {
+    const animate = (time) => (ctx, { path=[], size }) => {
+        if (ctx.canvas.width !== size.width) {
+            ctx.canvas.width = size.width;
+        }
+        if (ctx.canvas.height !== size.height) {
+            ctx.canvas.height = size.height;
+        }
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         if (path.byteLength === 0) return;

@@ -1,6 +1,7 @@
 
 export function clear(ctx) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+    const { width, height } = ctx.canvas;
+    ctx.clearRect((width / 2) - 200, (height / 2) - 200, width + 200, height + 200);
 }
 
 export function drawLine(ctx, from, to, {
@@ -27,7 +28,12 @@ export function FullWindowCanvas () {
         // maxWidth: '100%'
         transformOrigin: '0 0',
         transform: `scale(${1/res}, ${1/res})`,
+        border: '1px solid #ccc',
     });
+    window.addEventListener('resize', () => {
+        console.log('resize');
+        updateCanvasDimensions();
+    })
     updateCanvasDimensions();
     function updateCanvasDimensions() {
         canvas.width = window.innerWidth * res;
@@ -35,6 +41,7 @@ export function FullWindowCanvas () {
     }
     return canvas;
 }
+
 
 export function translateToCenter(ctx) {
     ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
@@ -71,7 +78,7 @@ export function createOffscreenCanvasWorker(animateMethod, offScreenCanvas, cont
                 console.log(ctx);
                 const mname = method(ctx);
                 const animate = (time) => {
-                    tracker(time);
+                    // tracker(time);
                     mname(ctx, state);
                     requestAnimationFrame(animate);
                 };
@@ -79,7 +86,7 @@ export function createOffscreenCanvasWorker(animateMethod, offScreenCanvas, cont
             },
             setState: (newState) => {
                 state = { ...state, ...newState };
-            },
+            }
         };
         onmessage = event => handlers[event.data.type](event.data.payload);
     `], {
@@ -88,7 +95,8 @@ export function createOffscreenCanvasWorker(animateMethod, offScreenCanvas, cont
     const worker = new Worker(URL.createObjectURL(blob));
     const createMessage = (type, payload) => ({ type, payload });
     worker.postMessage(createMessage('canvas', { canvas: offScreenCanvas }), [ offScreenCanvas ]);
+    
     return (newState, transfers) => {
         worker.postMessage(createMessage('setState', { ...newState }), transfers)
-    };
+    }
 }
