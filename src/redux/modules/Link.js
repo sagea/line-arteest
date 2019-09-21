@@ -1,5 +1,5 @@
-import { handleActions, createAction } from 'https://unpkg.com/redux-actions@2.6.5';
-import { Vector } from '../../shared/vector.js';
+import { handleActions, createAction } from 'redux-actions';
+import { Vector } from '../../shared/vector';
 
 const defaultState = {
     linkConfig: [],

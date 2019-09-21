@@ -1,4 +1,4 @@
-import { handleActions, createAction } from 'https://unpkg.com/redux-actions@2.6.5';
+import { handleActions, createAction } from 'redux-actions';
 
 const defaultState = {
     speed: 1,

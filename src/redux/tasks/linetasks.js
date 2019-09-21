@@ -1,8 +1,8 @@
-import { rotate, add, floor, Vector } from '../../shared/vector.js';
-import { toRad } from '../../shared/math.js';
-import { applyLinkConfig, setLinkRotation, setPath } from '../modules/Link.js';
-import { createWorkerFromMethod } from '../../shared/worker.js';
-import { batchActions } from '../../shared/batchedActions.js';
+import { rotate, add, floor, Vector } from '../../shared/vector';
+import { toRad } from '../../shared/math';
+import { applyLinkConfig, setLinkRotation, setPath } from '../modules/Link';
+import { createWorkerFromMethod } from '../../shared/worker';
+import { batchActions } from '../../shared/batchedActions';
 
 export function rotateLines(deltaTime) {
     const iterationsPerSecond = {

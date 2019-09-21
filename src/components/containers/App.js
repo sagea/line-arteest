@@ -1,12 +1,12 @@
-import * as lit from 'https://unpkg.com/lit-html@1.1.0/lit-html.js?module';
-import {styleMap} from 'https://unpkg.com/lit-html@1.1.0/directives/style-map.js?module';
-import { PureComponent, StatefullComponent } from '../../shared/Component.js';
-import { OptionsForm } from './OptionsForm.js';
-import { connect } from '../../redux/connect.js';
-import { updateForm } from '../../redux/tasks/linetasks.js';
-import { PathReRenderCanvas, PathReRenderCanvasPerformant } from './PathCanvas/PathRerenderCanvas.js';
-import { updateField } from '../../redux/modules/optionsForm.js';
-import { LinkCanvas, LinkCanvasPerformant } from './LinkCanvas.js';
+import * as lit from 'lit-html';
+import {styleMap} from 'lit-html/directives/style-map';
+import { PureComponent, StatefullComponent } from '../../shared/Component';
+import { OptionsForm } from './OptionsForm';
+import { connect } from '../../redux/connect';
+import { updateForm } from '../../redux/tasks/linetasks';
+import { PathReRenderCanvas, PathReRenderCanvasPerformant } from './PathCanvas/PathRerenderCanvas';
+import { updateField } from '../../redux/modules/optionsForm';
+import { LinkCanvas, LinkCanvasPerformant } from './LinkCanvas';
 const { html } = lit;
 console.log(lit);
 const mapStateToProps = ({
@@ -23,9 +23,8 @@ const mapStateToProps = ({
 }
 const c = document.createElement('canvas');
 export const App = connect(mapStateToProps)(StatefullComponent(() => {
-    const pathCanvas = PathReRenderCanvasPerformant()
+    const pathCanvas = PathReRenderCanvasPerformant(document.body)
     const linkCanvas = LinkCanvasPerformant(document.body);
-    linkCanvas({ linkConfig: [] });
     return ({
         speed,
         options,
@@ -37,7 +36,6 @@ export const App = connect(mapStateToProps)(StatefullComponent(() => {
         const handleFormUpdate = (fieldName, value) => {
             dispatch(updateField({ field: fieldName, value }));
         };
-        linkCanvas({ linkConfig });
         return html `
             <div>
                 ${pathCanvas({ path })}

@@ -1,7 +1,7 @@
 
-import { html } from 'https://unpkg.com/lit-html@1.1.0/lit-html.js?module';
-import { styleMap } from 'https://unpkg.com/lit-html@1.1.0/directives/style-map.js?module';
-import { PureComponent, inputValue, StatefullComponent } from '../../shared/Component.js';
+import { html } from 'lit-html/lit-html';
+import { styleMap } from 'lit-html/directives/style-map';
+import { PureComponent, inputValue, StatefullComponent } from '../../shared/Component';
 
 const containerStyles = {
     position: 'absolute',
@@ -50,6 +50,7 @@ export const OptionsForm = StatefullComponent(() => {
                 <button type="submit">Start</button>
             </form>
         </div>
+        
         `;
     }
 }, { open: true });

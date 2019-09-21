@@ -1,5 +1,5 @@
-import { clear, FullWindowCanvas, translateToCenter, createOffscreenCanvasWorker } from '../../../shared/canvas.js';
-import { StatefullComponent, OneTimeElementComponent } from '../../../shared/Component.js';
+import { clear, FullWindowCanvas, translateToCenter, createOffscreenCanvasWorker } from '../../../shared/canvas';
+import { StatefullComponent, OneTimeElementComponent } from '../../../shared/Component';
 
 function toArrayBuffer (path) {
     const length = path.length;

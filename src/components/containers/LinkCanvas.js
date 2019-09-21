@@ -1,6 +1,6 @@
-import { StatefullComponent, OneTimeElementComponent } from '../../shared/Component.js';
-import { clear, FullWindowCanvas, drawLine, translateToCenter, createOffscreenCanvasWorker } from '../../shared/canvas.js';
-import { add, zero, Vector, rotate } from '../../shared/vector.js';
+import { StatefullComponent, OneTimeElementComponent } from '../../shared/Component';
+import { clear, FullWindowCanvas, drawLine, translateToCenter, createOffscreenCanvasWorker } from '../../shared/canvas';
+import { add, zero, Vector, rotate } from '../../shared/vector';
 
 export const LinkCanvasPerformant = (appendTo) => {
     const canvas = FullWindowCanvas(2);

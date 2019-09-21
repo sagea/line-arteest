@@ -1,7 +1,7 @@
-import { html, directive } from 'https://unpkg.com/lit-html@1.1.0/lit-html.js?module';
+import { html, directive } from 'lit-html/lit-html';
 // import { StatefullComponent } from "../../shared/Component.js";
-import { drawLine, clear, translateToCenter } from '../../../shared/canvas.js';
-import { StatefullComponent } from '../../../shared/Component.js';
+import { drawLine, clear, translateToCenter } from '../../../shared/canvas';
+import { StatefullComponent } from '../../../shared/Component';
 
 const createWorker = (fn) => {
     if (typeof fn !== 'function') throw new Error('Fn requires a function');

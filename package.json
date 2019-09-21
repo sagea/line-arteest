@@ -5,8 +5,23 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "http-server src/ -p 22578"
+    "start": "http-server dist/ -p 22578",
+    "build:dev": "npx webpack",
+    "build:prod": "npx webpack --env.production",
+    "development": "concurrently 'npm run build:dev -- --watch' 'npm run start'"
   },
-  "author": "",
-  "license": "ISC"
+  "author": "Alexander sage <sagezander@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^4.1.2",
+    "copy-webpack-plugin": "^5.0.4",
+    "webpack": "^4.40.2",
+    "webpack-cli": "^3.3.9"
+  },
+  "dependencies": {
+    "lit-html": "^1.1.2",
+    "redux": "^4.0.1",
+    "redux-actions": "^2.6.5",
+    "redux-thunk": "^2.3.0"
+  }
 }

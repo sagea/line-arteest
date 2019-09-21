@@ -1,4 +1,4 @@
-import { html, directive } from 'https://unpkg.com/lit-html@1.1.0/lit-html.js?module';
+import { html, directive } from 'lit-html/lit-html';
 
 const stateManager = new WeakMap();
 const propsManager = new WeakMap();
