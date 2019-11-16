@@ -1,0 +1,14 @@
+{
+
+    speed: 1,
+    optionsConfig: [
+        { id: uuid(), length: 50, speed: -3.01, modifier: ({ length }, frameTime) => ({
+            length: 50 + (199 * Math.sin(toRad(frameTime / 20)) ),
+            speed: Math.sin(toRad(frameTime / 1000)) * 3.01
+         })  },
+        { id: uuid(), length: 10, speed: 10.01 },
+        { id: uuid(), length: 100, speed: 1 },
+        { id: uuid(), length: 20, speed: 0, modifier: ({ speed }) => ({ speed: speed + .8 }) },
+    ],
+    maxPoints: 2236,
+}

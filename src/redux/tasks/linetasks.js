@@ -1,10 +1,9 @@
 import { rotate, add, floor, Vector } from '../../shared/vector';
 import { toRad } from '../../shared/math';
 import { applyLinkConfig, setLinkRotation, setPath } from '../modules/Link';
-import { createWorkerFromMethod } from '../../shared/worker';
 import { batchActions } from '../../shared/batchedActions';
 
-export function rotateLines(deltaTime) {
+export function rotateLines(deltaTime, frameTime) {
     const iterationsPerSecond = {
         min: 100,
         max: 10000,
@@ -25,7 +24,18 @@ export function rotateLines(deltaTime) {
         let currentLinkRotation = links;
         const iterationsPerSecondTotal = iterationsPerSecond.min + ((iterationsPerSecond.max - iterationsPerSecond.min) * speed);
         const iterations = Math.floor((deltaTime / 1000) * iterationsPerSecondTotal);
-        let linkConf = linkConfig;
+        let linkConf = linkConfig.map(i => {
+            if (i.modifier) {
+                const res = {
+                    ...i,
+                    ...i.modifier(i, frameTime),
+                };
+                res.speedRad = toRad(res.speed);
+                return res;
+            }
+            return i;
+        });
+        
         for (let i = 0; i < iterations; i++) {
             linkConf = linkConf.map((conf) => {
                 return {
@@ -65,21 +75,22 @@ function zzz(item) {
 // })
 let animationInstance; 
 let instance = 0;
-export function updateForm({ speed, options }) {
+export function updateForm({ speed, options, optionsConfig }) {
     return (dispatch, getState) => {
         var a = instance++;
         if (animationInstance) cancelAnimationFrame(animationInstance);
-        var string = options.trim().split('\n');
-        var lineData = string
-            .map(line => line.trim())
-            .filter(line => !!Boolean(line))
-            .map(line =>
-                line
-                    .split(/\s+/)
-                    .map(line => line.trim())
-                    .map(parseFloat)
-            )
-            .map(([length, speed, sizeIncrease = 0]) => ({ length, speed, speedRad: toRad(speed), sizeIncrease, rotation: 0 }));
+        const lineData = optionsConfig.map((optionConfig) => ({ ...optionConfig, speedRad: toRad(optionConfig.speed), rotation: 0 }));
+        // var string = options.trim().split('\n');
+        // var lineData = string
+        //     .map(line => line.trim())
+        //     .filter(line => !!Boolean(line))
+        //     .map(line =>
+        //         line
+        //             .split(/\s+/)
+        //             .map(line => line.trim())
+        //             .map(parseFloat)
+        //     )
+        //     .map(([length, speed, sizeIncrease = 0]) => ({ length, speed, speedRad: toRad(speed), sizeIncrease, rotation: 0 }));
         
         dispatch(applyLinkConfig(lineData));
         dispatch(setPath([]));
@@ -90,7 +101,7 @@ export function updateForm({ speed, options }) {
             zzz(1000 / (deltaTime || 1));
             // logger.postMessage(1000 / deltaTime);
             // item.value = 1000 / deltaTime;
-            dispatch(rotateLines(deltaTime));
+            dispatch(rotateLines(deltaTime, time));
             lastTime = time;
             animationInstance = requestAnimationFrame(animate);
         }

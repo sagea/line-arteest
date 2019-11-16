@@ -1,7 +1,8 @@
 
 import { html } from 'lit-html/lit-html';
 import { styleMap } from 'lit-html/directives/style-map';
-import { PureComponent, inputValue, StatefullComponent } from '../../shared/Component';
+import { inputValue, StatefullComponent } from '../../shared/Component';
+import { LineDefinitionContainer } from './LineDefinitionTextArea';
 
 const containerStyles = {
     position: 'absolute',
@@ -14,10 +15,13 @@ export const OptionsForm = StatefullComponent(() => {
     return (props, [], getState, setState) => {
         const {
             speed = 1,
-            options = '',
+            optionsConfig,
             maxPoints=1000,
             onUpdateField,
             handleSubmit,
+            addOption=()=>{},
+            removeOption=({id})=>{},
+            updateOption=({id, fieldName, value})=>{}
         } = props;
         const { open } = getState();
 
@@ -31,7 +35,7 @@ export const OptionsForm = StatefullComponent(() => {
             <div>
                 <button @click=${() => setState({ open: !open })} type="button">${ open ? '-' : '+' }</button>
             </div>
-            <form style=${styleMap({ display: open ? 'block' : 'none' })} @submit=${submit}>
+            <form style=${styleMap({ display: open ? 'block' : 'none' })} @submit=${submit} novalidate>
                 <label>
                     Speed: (${Math.floor(speed * 100)})<br>
                     <input type="range" min="0" max="1" step=".01" .value=${inputValue(speed)} @input=${handleFieldChange('speed')}>
@@ -42,15 +46,19 @@ export const OptionsForm = StatefullComponent(() => {
                     <input type="range" min="1000" max="50000" step="2" .value=${inputValue(maxPoints)} @input=${handleFieldChange('maxPoints')}>
                 </label>
                 <br />
-                <label>
-                    Options: <br>
-                    <textarea .value=${inputValue(options)} @input=${handleFieldChange('options')}></textarea>
-                </label>
+                Options: <br>
+                ${
+                    LineDefinitionContainer({
+                        lineDefinitionConfig: optionsConfig,
+                        onAdd: addOption,
+                        onRemove: removeOption,
+                        onUpdate: updateOption,
+                    })
+                }
 
                 <button type="submit">Start</button>
             </form>
         </div>
-        
         `;
     }
 }, { open: true });
