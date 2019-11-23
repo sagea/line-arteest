@@ -1,54 +1,49 @@
-
 export function clear(ctx) {
-    const { width, height } = ctx.canvas;
-    ctx.clearRect((width / 2) - 200, (height / 2) - 200, width + 200, height + 200);
+  const { width, height } = ctx.canvas
+  ctx.clearRect(width / 2 - 200, height / 2 - 200, width + 200, height + 200)
 }
 
-export function drawLine(ctx, from, to, {
-    strokeStyle = 'black'
-}={}) {
-    ctx.save();
-    ctx.beginPath();
-    ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
-    ctx.lineWidth = 4;
-    ctx.strokeStyle = strokeStyle;
-    ctx.moveTo(from.x, from.y);
-    ctx.lineTo(to.x, to.y);
-    ctx.stroke();
-    ctx.restore();
+export function drawLine(ctx, from, to, { strokeStyle = 'black' } = {}) {
+  ctx.save()
+  ctx.beginPath()
+  ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2)
+  ctx.lineWidth = 4
+  ctx.strokeStyle = strokeStyle
+  ctx.moveTo(from.x, from.y)
+  ctx.lineTo(to.x, to.y)
+  ctx.stroke()
+  ctx.restore()
 }
 
-export function FullWindowCanvas () {
-    const res = 2;
-    const canvas = document.createElement('canvas');
-    Object.assign(canvas.style, {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        // maxWidth: '100%'
-        transformOrigin: '0 0',
-        transform: `scale(${1/res}, ${1/res})`,
-        border: '1px solid #ccc',
-    });
-    window.addEventListener('resize', () => {
-        console.log('resize');
-        updateCanvasDimensions();
-    })
-    updateCanvasDimensions();
-    function updateCanvasDimensions() {
-        canvas.width = window.innerWidth * res;
-        canvas.height = window.innerHeight * res;
-    }
-    return canvas;
+export function FullWindowCanvas() {
+  const res = 2
+  const canvas = document.createElement('canvas')
+  Object.assign(canvas.style, {})
+  window.addEventListener('resize', () => {
+    console.log('resize')
+    updateCanvasDimensions()
+  })
+  updateCanvasDimensions()
+  function updateCanvasDimensions() {
+    // canvas.width = window.innerWidth
+    // canvas.height = window.innerHeight
+  }
+  return canvas
 }
-
 
 export function translateToCenter(ctx) {
-    ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2);
+  ctx.translate(ctx.canvas.width / 2, ctx.canvas.height / 2)
 }
 
-export function createOffscreenCanvasWorker(animateMethod, offScreenCanvas, contextOptions={}, context='2d') {
-    const blob = new Blob([`
+export function createOffscreenCanvasWorker(
+  animateMethod,
+  offScreenCanvas,
+  contextOptions = {},
+  context = '2d',
+) {
+  const blob = new Blob(
+    [
+      `
         const FpsTracker = (callback, debounceIterations=15) => {
             let arr = [];
             let lastTime;
@@ -73,11 +68,21 @@ export function createOffscreenCanvasWorker(animateMethod, offScreenCanvas, cont
         const handlers = {
             canvas: ({ canvas }) => {
                 cvs = canvas;
-                ctx = cvs.getContext('${context}', ${JSON.stringify(contextOptions)});
+                ctx = cvs.getContext('${context}', ${JSON.stringify(
+        contextOptions,
+      )});
+                  canvas.width=500
+                  canvas.height=500
                 ctx.imageSmoothingEnabled = false;
                 console.log(ctx);
                 const mname = method(ctx);
                 const animate = (time) => {
+                    if (state.width && canvas.width !== state.width) {
+                        canvas.width = state.width;
+                    }
+                    if (state.height && canvas.height !== state.height) {
+                        canvas.height = state.height;
+                    }
                     // tracker(time);
                     mname(ctx, state);
                     requestAnimationFrame(animate);
@@ -89,14 +94,19 @@ export function createOffscreenCanvasWorker(animateMethod, offScreenCanvas, cont
             }
         };
         onmessage = event => handlers[event.data.type](event.data.payload);
-    `], {
-        type: 'application/javascript'
-    });
-    const worker = new Worker(URL.createObjectURL(blob));
-    const createMessage = (type, payload) => ({ type, payload });
-    worker.postMessage(createMessage('canvas', { canvas: offScreenCanvas }), [ offScreenCanvas ]);
-    
-    return (newState, transfers) => {
-        worker.postMessage(createMessage('setState', { ...newState }), transfers)
-    }
+    `,
+    ],
+    {
+      type: 'application/javascript',
+    },
+  )
+  const worker = new Worker(URL.createObjectURL(blob))
+  const createMessage = (type, payload) => ({ type, payload })
+  worker.postMessage(createMessage('canvas', { canvas: offScreenCanvas }), [
+    offScreenCanvas,
+  ])
+
+  return (newState, transfers) => {
+    worker.postMessage(createMessage('setState', { ...newState }), transfers)
+  }
 }

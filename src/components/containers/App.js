@@ -44,10 +44,25 @@ export const getPathDimensions = path => {
     width: right - left,
   }
 }
+const doTheThing = () => {
+  const div = document.createElement('div')
+  Object.assign(div.style, {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: '100%',
+    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    display: 'flex',
+  })
+  document.body.appendChild(div)
+  return PathReRenderCanvasWebgl(div)
+}
 export const App = connect(mapStateToProps)(
   StatefullComponent(
     (props, children, getState, setState) => {
-      const canvas = PathReRenderCanvasWebgl(document.body)
+      const canvas = doTheThing()
       // const linkCanvas = LinkCanvasPerformant(document.body);
       const linkConfigMap = new WeakMap()
       return (
