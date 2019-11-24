@@ -1,15 +1,7 @@
-import { add } from './worker-tests'
+import { html, render } from 'lit-html'
 import { setCanvas, setCanvasDimensions, setLinkConfig } from './canvas/canvas'
 import uuid from 'uuid/v4'
-// ;(async () => {
-//   let value = 0
-//   for (let i = 0; i < 100; i++) {
-//     value = await add(value, i)
-//     console.log('single call', value)
-//   }
-//   console.log('final', value)
-// })()
-;(() => {
+;(async () => {
   const canvas = document.createElement('canvas')
   canvas.width = window.innerWidth
   canvas.height = window.innerHeight
@@ -21,16 +13,17 @@ import uuid from 'uuid/v4'
   })
   document.body.appendChild(canvas)
   const offscreenCanvas = canvas.transferControlToOffscreen()
-  setCanvas(offscreenCanvas)
-  setLinkConfig([
-    { id: uuid(), length: 10, speed: 0.02 },
-    { id: uuid(), length: 5, speed: -0.0501 },
-    { id: uuid(), length: 20, speed: -0.011 },
-  ])
   window.addEventListener('resize', () => {
     setCanvasDimensions({
       width: window.innerWidth,
       height: window.innerHeight,
     })
   })
+  await setCanvas(offscreenCanvas)
+  await setLinkConfig([
+    { id: uuid(), length: 50, speed: 3.01, direction: -1 },
+    { id: uuid(), length: 10, speed: 10.01, direction: 1 },
+    { id: uuid(), length: 100, speed: 1, direction: 1 },
+    { id: uuid(), length: 20, speed: 1, direction: -1 },
+  ])
 })()

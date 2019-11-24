@@ -1,7 +1,7 @@
 import { workerMethodCaller } from '../../modules/Worker/utils'
 
 const createCaller = workerMethodCaller(
-  new Worker('./canvas.worker.js', { type: 'module' }),
+  new Worker('./canvasWebgl.worker.js', { type: 'module' }),
 )
 
 export const setCanvas = createCaller('setCanvas', true)
