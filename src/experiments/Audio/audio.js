@@ -1,7 +1,8 @@
-import AudioWorker from './audio.worker'
 import { workerMethodCaller } from '../../modules/Worker/utils'
 
-const createCaller = workerMethodCaller(new AudioWorker())
+const createCaller = workerMethodCaller(
+  new Worker('./audio.worker.js', { type: 'module' }),
+)
 
 export const start = createCaller('start')
 export const stop = createCaller('stop')

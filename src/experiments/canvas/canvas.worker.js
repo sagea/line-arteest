@@ -8,16 +8,7 @@ let currentLinkState = {}
 let linkConfig = []
 let maxLinkSize = 0
 exportMethod(function setCanvas(offscreenCanvas) {
-  if (offscreenCanvas !== canvas) {
-    canvas = offscreenCanvas
-    ctx = offscreenCanvas.getContext('2d')
-    if (!width) {
-      width = canvas.width
-    }
-    if (!height) {
-      height = canvas.height
-    }
-  }
+  setupCanvas(offscreenCanvas)
 })
 
 exportMethod(function setCanvasDimensions(event) {
@@ -33,6 +24,18 @@ exportMethod(function setLinkConfig(config) {
     currentLinkState[id] = 0
   }
 })
+const setupCanvas = offscreenCanvas => {
+  if (canvas !== offscreenCanvas) {
+    canvas = offscreenCanvas
+    ctx = offscreenCanvas.getContext('2d')
+    if (!width) {
+      width = canvas.width
+    }
+    if (!height) {
+      height = canvas.height
+    }
+  }
+}
 let points = []
 const animate = time => {
   if (canvas && linkConfig.length) {
