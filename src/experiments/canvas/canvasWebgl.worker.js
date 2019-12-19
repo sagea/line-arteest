@@ -1,31 +1,121 @@
 import { workerMethodCreator } from '../../modules/Worker/utils'
 import { toRad } from '../../shared/math'
+import thunk from 'redux-thunk'
+import { createStore, applyMiddleware } from 'redux'
+import { createActions, handleActions } from 'redux-actions'
+import { v2 } from './vector'
+
 const exportMethod = workerMethodCreator(self)
+const actions = createActions(
+  'setTime',
+  'preRender',
+  'setLinkConfig',
+  'setWindowDimensions',
+  'frame',
+)
+const defaultState = {
+  linkRotation: {},
+  linkConfig: [],
+  points: [],
+  windowWidth: undefined,
+  windowHeight: undefined,
+  width: undefined,
+  height: undefined,
+  itterationsPerSecond: 1000,
+  maxPoints: 10700,
+  linkRotationVector: [],
+  // todo: make reducer
+  time: {
+    last: undefined,
+    now: undefined,
+    delta: undefined,
+    fps: [],
+  },
+}
+setInterval(() => {
+  const { fps } = store.getState().time
+  const start = fps[0]
+  const latest = fps[fps.length - 1]
+  const foo = 1000 / ((latest - start) / fps.length)
+  console.log(foo)
+  // console.log(fps.reduce((a, b) => a + b) / fps.length, 0)
+}, 300)
+const reducer = handleActions(
+  {
+    [actions.frame]: state => {
+      const linkRotation = state.linkConfig.reduce(
+        (linkRotation, { id, speed, direction }) => ({
+          ...linkRotation,
+          [id]: linkRotation[id] + speed * direction,
+        }),
+        state.linkRotation,
+      )
+      const linkRotationVector = state.linkConfig.map(({ id, length }) =>
+        v2.mult(v2.fromAngle(toRad(linkRotation[id])), length),
+      )
+      const point = linkRotationVector.reduce((a, b) => v2.add(a, b), v2(0, 0))
+      return {
+        ...state,
+        linkRotation,
+        linkRotationVector,
+        points: [...state.points, point].slice(-state.maxPoints),
+      }
+    },
+    [actions.setTime]: (state, { payload }) => {
+      const now = payload
+      const last = typeof state.time.now == 'number' ? state.time.now : payload
+      const delta = now - last
+      const fps = [...state.time.fps, state.time.now].slice(-5)
+      return {
+        ...state,
+        time: {
+          ...state.time,
+          last,
+          now,
+          delta,
+          fps: fps,
+        },
+      }
+    },
+    [actions.setLinkConfig]: (state, { payload }) => {
+      const maxLength = payload.reduce((a, { length }) => a + length, 0);
+      const size = maxLength + 20
+      return {
+        ...state,
+        width: size,
+        height: size,
+        points: [],
+        linkRotationVector: [],
+        linkConfig: payload,
+        linkRotation: payload.reduce((res, { id }) => ({ ...res, [id]: 0 }), {}),
+      };
+    },
+    [actions.setWindowDimensions]: (state, { payload }) => ({
+      ...state,
+      windowWidth: payload.width,
+      windowHeight: payload.height,
+    }),
+  },
+  defaultState,
+)
+
+const store = createStore(reducer, applyMiddleware(thunk))
+
 let canvas
 let gl
-let width
-let height
-let currentLinkState = {}
-let linkConfig = []
 let buffer
 let program
-let points = []
-let lastTime
+
 exportMethod(function setCanvas(offscreenCanvas) {
   setupCanvas(offscreenCanvas)
 })
 
-exportMethod(function setCanvasDimensions(event) {
-  width = event.width
-  height = event.height
+exportMethod(function setWindowDimensions({ width, height }) {
+  store.dispatch(actions.setWindowDimensions({ width, height }))
 })
 
 exportMethod(function setLinkConfig(config) {
-  currentLinkState = {}
-  linkConfig = config
-  for (let { id } of config) {
-    currentLinkState[id] = 0
-  }
+  store.dispatch(actions.setLinkConfig(config))
 })
 
 const createShader = (gl, shaderType, shaderSource) => {
@@ -63,136 +153,82 @@ const createProgram = (gl, ...shaders) => {
 const pathBuffer = (gl, path) => {
   gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(path), gl.STATIC_DRAW)
-  return {
-    draw() {
-      gl.drawArrays(gl.LINE_STRIP, 0, path.length / 2)
-    },
-  }
-}
-const clear = gl => {
-  gl.clearColor(1, 1, 1, 1)
-  gl.clear(gl.COLOR_BUFFER_BIT)
 }
 
 const setupCanvas = offscreenCanvas => {
   if (canvas !== offscreenCanvas) {
     canvas = offscreenCanvas
-    if (!width) width = canvas.width
-    if (!height) height = canvas.height
     gl = offscreenCanvas.getContext('webgl')
 
     const vs = createVertexShader(
       gl,
       `
-            precision mediump float;
+        precision mediump float;
 
-            attribute vec2 position;
+        attribute vec2 position;
 
-            void main(void) {
-                gl_Position = vec4(position.x, position.y, 0.0, 0.75);
-            }
-        `,
+        void main(void) {
+            gl_Position = vec4(position.x, position.y, 0.0, 1.0);
+        }
+      `,
     )
     const fs = createFragmentShader(
       gl,
       `
-            precision highp float;
-
-            void main(void) {
-              gl_FragColor = vec4(0.0,0.0,0.0,1.0);
-            }
-        `,
+        precision highp float;
+        void main(void) {
+          float v = 0.6;
+          gl_FragColor = vec4(v, v, v, 1);
+        }
+      `,
     )
     buffer = gl.createBuffer()
     program = createProgram(gl, vs, fs)
   }
 }
 
-const action = time => {
-  if (canvas && linkConfig.length) {
-    if (!lastTime) {
-      lastTime = time
-    }
-    if (width && canvas.width !== width) {
-      canvas.width = width
-    }
-    if (height && canvas.height !== height) {
-      canvas.height = height
-    }
-    const maxPoints = 2000
-    const deltaTime = time - lastTime
-    const itterationsPerSecond = 1000
-    const itterations = Math.min(
-      maxPoints,
-      Math.ceil((deltaTime / 1000) * itterationsPerSecond),
-    )
-    for (let i = 0; i < itterations; i++) {
-      const point = linkConfig
-        .map(({ id, length, speed, direction }) => {
-          const angle = currentLinkState[id] || 0
-          currentLinkState[id] = speed * direction + angle
-          return v2.mult(v2.fromAngle(toRad(currentLinkState[id])), length)
-        })
-        .reduce((a, b) => v2.add(a, b), v2(0))
-      points.push(point)
-    }
-    const point = linkConfig
-      .map(({ id, length }) =>
-        v2.mult(v2.fromAngle(toRad(currentLinkState[id])), length),
-      )
-      .reduce((a, b) => v2.add(a, b), v2(0))
-    points = points.slice(-maxPoints)
-    const res = linkConfig
-      .map(({ id, length }) =>
-        v2.mult(v2.fromAngle(toRad(currentLinkState[id])), length),
-      )
-      .reduce((a, b) => [...a, v2.add(a[a.length - 1], b)], [v2(0)])
-      .flatMap(({ x, y }) => [x / width, y / height])
-
-    const t = points.flatMap(({ x, y }) => [x / width, y / height])
-
-    const pp = pathBuffer(gl, t)
+const render = () => {
+  const { linkRotationVector, points, width, height, windowWidth, windowHeight } = store.getState()
+  if (points.length >= 10 && windowHeight && windowWidth && width && height) {
+    const point = points[points.length - 1]
+    const res = linkRotationVector
+      .reduce((a, b) => [...a, v2.add(a[a.length - 1], b)], [v2(0, 0)])
+      .flatMap(([x, y]) => [x / width, y / height])
+    const t = points.flatMap(([x, y]) => [x / width, y / height])
+    gl.canvas.width = Math.min(windowWidth, width)
+    gl.canvas.height = Math.min(windowHeight, height)
     gl.viewport(0, 0, width, height)
     program.activateVariable('vec2', 'position')
     gl.useProgram(program.program)
-    clear(gl)
-    pp.draw({ lineWidth: 5 })
-    const ff = pathBuffer(gl, res)
-    ff.draw()
+    pathBuffer(gl, t)
+    pathBuffer(gl, t)
+    gl.drawArrays(gl.LINE_STRIP, 0, t.length / 2)
+    pathBuffer(gl, res)
+    gl.drawArrays(gl.LINE_STRIP, 0, res.length / 2)
     CircleGl(gl, point)
-    lastTime = time
   }
 }
+
 const CircleGl = (gl, center, radius = 20) => {
+  const { width, height } = store.getState()
   let circle = []
   for (let i = 0; i <= 20; i++) {
     const angle = Math.min(1, i / 20) * (Math.PI * 2)
     circle.push(v2.add(center, v2.mult(v2.fromAngle(angle), radius)))
   }
-  circle = circle.flatMap(({ x, y }) => [x / width, y / height])
-  pathBuffer(gl, circle).draw()
+  circle = circle.flatMap(([x, y]) => [x / width, y / height])
+  pathBuffer(gl, circle)
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, circle.length / 2)
 }
-const animate = time => {
-  action(time)
+const animate = currentTime => {
+  store.dispatch(actions.setTime(currentTime))
+  const { itterationsPerSecond, time } = store.getState()
+  const seconds = Math.min(0.5, time.delta / 1000)
+  const itterations = Math.ceil(seconds * itterationsPerSecond)
+  for (let i = 0; i < itterations; i++) {
+    store.dispatch(actions.frame())
+  }
+  render()
   requestAnimationFrame(animate)
 }
 requestAnimationFrame(animate)
-
-const v2 = (x, y) => ({ x, y: typeof y === 'number' ? y : x })
-v2.add = (a, b) => {
-  b = typeof b === 'number' ? v2(b) : b
-  return v2(a.x + b.x, a.y + b.y)
-}
-v2.mult = (a, b) => {
-  b = typeof b === 'number' ? v2(b) : b
-  return v2(a.x * b.x, a.y * b.y)
-}
-v2.fromAngle = angle => v2(Math.cos(angle), Math.sin(angle))
-v2.distance = (a, b) => {
-  b = typeof b === 'number' ? v2(b) : b
-  const xDist = b.x - a.x
-  const yDist = b.y - a.y
-  if (xDist === 0) return yDist
-  if (yDist === 0) return xDist
-  return Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2))
-}

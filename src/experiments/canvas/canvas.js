@@ -5,5 +5,5 @@ const createCaller = workerMethodCaller(
 )
 
 export const setCanvas = createCaller('setCanvas', true)
-export const setCanvasDimensions = createCaller('setCanvasDimensions')
+export const setWindowDimensions = createCaller('setWindowDimensions')
 export const setLinkConfig = createCaller('setLinkConfig')
