@@ -103,7 +103,6 @@ const store = createStore(reducer, applyMiddleware(thunk))
 
 let canvas
 let gl
-let buffer
 let program
 
 exportMethod(function setCanvas(offscreenCanvas) {
@@ -150,11 +149,6 @@ const createProgram = (gl, ...shaders) => {
   }
 }
 
-const pathBuffer = (gl, path) => {
-  gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
-  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(path), gl.STATIC_DRAW)
-}
-
 const setupCanvas = offscreenCanvas => {
   if (canvas !== offscreenCanvas) {
     canvas = offscreenCanvas
@@ -176,13 +170,13 @@ const setupCanvas = offscreenCanvas => {
       gl,
       `
         precision highp float;
+        uniform vec4 color;
         void main(void) {
           float v = 0.6;
-          gl_FragColor = vec4(v, v, v, 1);
+          gl_FragColor = color;
         }
       `,
     )
-    buffer = gl.createBuffer()
     program = createProgram(gl, vs, fs)
   }
 }
@@ -195,31 +189,60 @@ const render = () => {
       .reduce((a, b) => [...a, v2.add(a[a.length - 1], b)], [v2(0, 0)])
       .flatMap(([x, y]) => [x / width, y / height])
     const t = points.flatMap(([x, y]) => [x / width, y / height])
-    gl.canvas.width = Math.min(windowWidth, width)
-    gl.canvas.height = Math.min(windowHeight, height)
-    gl.viewport(0, 0, width, height)
-    program.activateVariable('vec2', 'position')
+    const sw = Math.min(windowWidth, width)
+    const sh = Math.min(windowHeight, height)
+    gl.canvas.width = sw
+    gl.canvas.height = sh
+    gl.viewport(0, 0, sw, sh)
     gl.useProgram(program.program)
-    pathBuffer(gl, t)
-    pathBuffer(gl, t)
-    gl.drawArrays(gl.LINE_STRIP, 0, t.length / 2)
-    pathBuffer(gl, res)
+    const buffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
+    const attribPosition = gl.getAttribLocation(program.program, 'position')
+    gl.vertexAttribPointer(attribPosition, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(attribPosition)
+    const color = gl.getUniformLocation(program.program, 'color')
+    // while(t.length) {
+    //   let list = []
+    //   for (let i = 0; i < Math.min(t.length, 4); i++) {
+    //     list.push(t.shift())
+    //   }
+    //   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(list), gl.STATIC_DRAW)
+    //   gl.uniform4f(color, Math.random(), Math.random(), Math.random(), 1)
+    //   gl.drawArrays(gl.LINE_STRIP, 0, list.length / 2)
+    // }
+    const size = 5000
+    for (let i = 0; i < t.length; i += size) {
+      let list = t.slice(i, i + size);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(list), gl.STATIC_DRAW)
+      gl.uniform4f(color, .5 + (Math.random() * .3), .5, .5, 1)
+      gl.drawArrays(gl.LINE_STRIP, 0, list.length / 2)
+      i -= 2;
+    }
+    // gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(t), gl.STATIC_DRAW)
+    // gl.uniform4f(color, .6, .6, .6, 1)
+    // gl.drawArrays(gl.LINE_STRIP, 0, t.length / 2)
+
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(res), gl.STATIC_DRAW)
+    gl.uniform4f(color, .6, .6, .6, 1)
     gl.drawArrays(gl.LINE_STRIP, 0, res.length / 2)
-    CircleGl(gl, point)
+
+    const circleBuffer = circle(point, 20)
+      .flatMap(([x, y]) => [x / width, y / height])
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(circleBuffer), gl.STATIC_DRAW)
+    gl.uniform4f(color, .6, .6, .6, 1)
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, circleBuffer.length / 2)
   }
 }
 
-const CircleGl = (gl, center, radius = 20) => {
-  const { width, height } = store.getState()
+const circle = (center, radius) => {
   let circle = []
   for (let i = 0; i <= 20; i++) {
     const angle = Math.min(1, i / 20) * (Math.PI * 2)
     circle.push(v2.add(center, v2.mult(v2.fromAngle(angle), radius)))
   }
-  circle = circle.flatMap(([x, y]) => [x / width, y / height])
-  pathBuffer(gl, circle)
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, circle.length / 2)
+  return circle;
 }
+
 const animate = currentTime => {
   store.dispatch(actions.setTime(currentTime))
   const { itterationsPerSecond, time } = store.getState()
