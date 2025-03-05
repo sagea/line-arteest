@@ -1,8 +1,17 @@
 ### Setup
 ```
-npm ci
+pnpm i
 ```
 ### Development
 ```
-npm run development
+pnpm dev
+```
+
+## Production
+```
+pnpm build
+```
+### Preview Production Build
+```
+pnpm preview
 ```

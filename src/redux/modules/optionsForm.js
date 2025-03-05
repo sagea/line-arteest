@@ -12,10 +12,10 @@ const modifierB = ({ speed }, frameTime) => ({
 const defaultState = {
   speed: 1,
   optionsConfig: [
-    { id: uuid(), length: 50, speed: -3.01, modifier: modifierA },
+    { id: uuid(), length: 50, speed: -3.01 },
     { id: uuid(), length: 10, speed: 10.01 },
     { id: uuid(), length: 100, speed: 1 },
-    { id: uuid(), length: 20, speed: 0, modifier: modifierB },
+    { id: uuid(), length: 20, speed: 0 },
   ],
   maxPoints: 2236,
 }
